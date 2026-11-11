@@ -1,0 +1,35 @@
+# raw captures are large: keep them out of git, download from the Coimbra release
+data/
+data_fixture/
+config_fixture.json
+build/
+*.vvp
+# Vivado / Vitis
+*.jou
+*.log
+*.str
+.Xil/
+vivado_project/
+vitis_workspace/
+selftest/
+.venv/
+# Windows download markers (created when files are copied from Windows)
+*:Zone.Identifier
+*Zone.Identifier
+# Python caches
+__pycache__/
+*.pyc
+# downloaded dataset archives (also kept out of git; download from the release)
+*.zip
+# editor local state
+.vscode/
+.idea/
+# internal team documentation (kept local, not pushed)
+docs/
+# personal scratch files
+build_partcheck.tcl
+# Vivado / Vitis extra outputs if run inside the repo
+vivado_m1/
+*.backup.*
+.hw/
+.ip_user_files/
