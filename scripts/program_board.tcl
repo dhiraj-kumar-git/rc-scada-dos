@@ -1,8 +1,8 @@
 # Program the ZedBoard (PROG/JTAG USB port connected, board powered on).
 # UNTESTED until it runs on the team's Vivado. Run from the repo root:
-#   vivado -mode batch -source scripts/program_m1.tcl
+#   vivado -mode batch -source scripts/program_board.tcl
 # Optional argument: a different .bit file
-#   vivado -mode batch -source scripts/program_m1.tcl -tclargs build/top_dfx.bit
+#   vivado -mode batch -source scripts/program_board.tcl -tclargs build/top_dfx.bit
 set root [file normalize [file join [file dirname [info script]] ..]]
 set bit [file join $root build replay_top.bit]
 if {$argc > 0} { set bit [file normalize [lindex $argv 0]] }
@@ -15,5 +15,5 @@ if {$dev eq ""} { error "no xc7z020 device found: check the USB cable and board 
 current_hw_device $dev
 set_property PROGRAM.FILE $bit $dev
 program_hw_devices $dev
-puts "M1_RESULT programmed $bit"
+puts "PROGRAM_RESULT programmed $bit"
 close_hw_manager

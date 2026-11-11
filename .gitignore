@@ -29,7 +29,7 @@ docs/
 # personal scratch files
 build_partcheck.tcl
 # Vivado / Vitis extra outputs if run inside the repo
-vivado_m1/
+vivado_replay/
 *.backup.*
 .hw/
 .ip_user_files/

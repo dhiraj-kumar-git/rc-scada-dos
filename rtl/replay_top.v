@@ -1,4 +1,4 @@
-// Milestone 1 board top: replay real records from block RAM through the
+// Board top: replay real records from block RAM through the
 // Detector. No ARM needed.
 //
 //   SW1..SW0  pick the region (scenario) from rtl/regions.vh

@@ -1,4 +1,4 @@
-## Milestone 1 constraints for replay_top on the ZedBoard.
+## Constraints for replay_top on the ZedBoard.
 ## Pins follow the Digilent ZedBoard master XDC. Check them once against the
 ## master XDC from Digilent before the first build.
 

@@ -7,16 +7,16 @@ Reads build/records/*.npz (from extract.py) and writes:
     build/rules.json        the learned depth-3 tree, integer thresholds
     rtl/rules.vh            the same tree as a Verilog function
     c/rules.h               the same tree as a C function
-    results/rules.txt       the tree in plain words
-    results/metrics.md      precision, recall, F1 per class on the TEST split,
+    results/learned_rules.txt       the tree in plain words
+    results/detection_metrics.md    precision, recall, F1 per class on the TEST split,
                             confusion matrix, alarm delay and false alarms per
                             test capture, and the teammates' hand rule for
                             comparison
-    results/windows_<capture>.png   counts per window, attack windows shaded
+    results/window_counts_<capture>.png   counts per window, attack windows shaded
 
 Window label: a window is labelled with the capture's attack class if it holds
 at least one attack packet (see extract.py), otherwise "normal".
-Training uses only captures with split "train"; all numbers in metrics.md come
+Training uses only captures with split "train"; all numbers in detection_metrics.md come
 from captures with split "test". random_state is fixed, so reruns give the
 same tree.
 """
@@ -121,7 +121,7 @@ def write_generated(root, rules):
         ["}", "#endif", ""]
     with open(os.path.join(root, "c", "rules.h"), "w") as f:
         f.write("\n".join(c))
-    with open(os.path.join(root, "results", "rules.txt"), "w") as f:
+    with open(os.path.join(root, "results", "learned_rules.txt"), "w") as f:
         f.write("\n".join(["Learned rules (depth-%d tree), counts per 100 ms window:" % MAX_DEPTH, ""]
                           + tree_to_code(rules, "txt")) + "\n")
 
@@ -242,13 +242,13 @@ def main(cfg_path):
         md.append("| %s | %s | %d | %s | %d |" % (capture_name(e), e["scenario"], fl,
                                                    "-" if dl is None else dl, fp))
     md.append("")
-    with open(os.path.join(base, "results", "metrics.md"), "w") as f:
+    with open(os.path.join(base, "results", "detection_metrics.md"), "w") as f:
         f.write("\n".join(md))
 
     for name, (e, X, y) in data.items():
-        plot(os.path.join(base, "results", "windows_%s.png" % name), name, X, y)
+        plot(os.path.join(base, "results", "window_counts_%s.png" % name), name, X, y)
 
-    print("\n".join(open(os.path.join(root, "results", "rules.txt")).read().splitlines()))
+    print("\n".join(open(os.path.join(root, "results", "learned_rules.txt")).read().splitlines()))
     print("\n".join(md))
 
 

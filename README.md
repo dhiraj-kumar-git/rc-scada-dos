@@ -1,14 +1,14 @@
 # FPGA attack tree evaluation of DoS attacks on SCADA (ZedBoard)
 
-Vivado builds can run from scripts: `scripts/vivado_m1.tcl` (Milestone 1
+Vivado builds can run from scripts: `scripts/build_replay.tcl` (replay
 bitstream), `scripts/dfx_smoke.tcl` (DFX full and partial bitstreams),
-`scripts/program_m1.tcl` (lab only). `make arm-check` runs the C code built
+`scripts/program_board.tcl` (lab only). `make arm-check` runs the C code built
 for the Cortex-A9 under QEMU.
 
 Reconfigurable Computing project, BITS Pilani WILP. Team: Parth Dutta,
 Riteshbabu Allam, Dhiraj Kumar, Saunak Chakraborty.
 
-Milestone 1 (today): real Modbus/TCP benchmark traffic (Coimbra ICS_PCAPS)
+Current scope: real Modbus/TCP benchmark traffic (Coimbra ICS_PCAPS)
 replayed from block RAM through a Verilog Detector that uses rules learned in
 Python. Python, the Verilog simulation, the C baseline and the board must all
 give the same answer, window by window.
@@ -24,13 +24,13 @@ below passed. If a check fails, the slide says "not done yet".
 | --- | --- |
 | `python/common.py` | One source of truth: record format, windows, persistence, golden model |
 | `python/extract.py` | pcap → records + `build/source_report.md` (who sends what) |
-| `python/train_rules.py` | Learns the depth-3 tree, writes `rtl/rules.vh`, `c/rules.h`, `results/metrics.md`, plots |
+| `python/train_rules.py` | Learns the depth-3 tree, writes `rtl/rules.vh`, `c/rules.h`, `results/detection_metrics.md`, plots |
 | `python/make_demo.py` | Builds `rtl/records.mem`, `rtl/regions.vh`, `c/records.h`, golden outputs |
 | `python/compare.py` | Checks sim / C / board output against the golden model |
-| `rtl/detector.v`, `rtl/replay_top.v` | Detector and Milestone 1 board top |
+| `rtl/detector.v`, `rtl/replay_top.v` | Detector and replay board top |
 | `tb/tb_replay.v` | Testbench over every region |
 | `c/detector.c`, `c/zynq_main.c` | ARM baseline (bare-metal) and its PC twin `c/host_main.c` |
-| `constraints/zedboard_m1.xdc` | Pins for clock, BTNC, SW0..1, LD0..7 |
+| `constraints/zedboard_replay.xdc` | Pins for clock, BTNC, SW0..1, LD0..7 |
 | `dfx_smoke/` | Two reconfigurable modules for the first DFX test |
 | `tests/make_fixture.py` | Synthetic pcaps that test the toolchain only, never results |
 
@@ -99,8 +99,8 @@ sources".
 make rules
 ```
 
-Done when `results/metrics.md` exists. Its tables are the detection results
-for the slides, together with `results/rules.txt` and `results/windows_*.png`.
+Done when `results/detection_metrics.md` exists. Its tables are the detection results
+for the slides, together with `results/learned_rules.txt` and `results/window_counts_*.png`.
 
 5. Build the demo memory.
 
@@ -120,11 +120,11 @@ git add rtl/rules.vh rtl/regions.vh rtl/records.mem c/rules.h c/records.h result
 ```
 
 ```
-git commit -m "Milestone 1: real-data rules and demo memory"
+git commit -m "Add Coimbra capture config, learned rules, demo memory and test metrics"
 ```
 
 ```
-git tag m1-data && git push && git push --tags
+git tag real-data-v1 && git push && git push --tags
 ```
 
 ## Verilog owner: simulation
@@ -137,12 +137,12 @@ Done when every region prints `PASS` and the last line is `RESULT: PASS`. Note
 the `cycles` and `records_per_cycle` values for each region: they are the
 FPGA timing results (at 100 MHz, time = cycles × 10 ns).
 
-## Board owner: Vivado, Milestone 1 bitstream
+## Board owner: Vivado, replay bitstream
 
 1. New RTL project, part `xc7z020clg484-1` (or the ZedBoard board file).
 2. Add sources: `rtl/detector.v`, `rtl/replay_top.v`, `rtl/rules.vh`,
    `rtl/regions.vh`, `rtl/records.mem`. Set `replay_top` as top.
-3. Add constraints: `constraints/zedboard_m1.xdc`. Check J18 (VADJ) as the
+3. Add constraints: `constraints/zedboard_replay.xdc`. Check J18 (VADJ) as the
    file explains.
 4. If synthesis says it cannot open an include file, add `rtl/` under
    Settings > General > Verilog options > Include directories.
@@ -187,14 +187,14 @@ Before the board: the same C code runs on a PC and must match.
 make host
 ```
 
-## DFX smoke test (stretch for today)
+## DFX smoke test
 
 Goal: show a partial bitstream changing one module while the rest keeps
 running. Uses `dfx_smoke/top_dfx.v` with two variants of `rm_pattern`
 (`rm_count.v`, `rm_walk.v`).
 
 1. New project with `top_dfx.v` and `rm_count.v`; LD0..LD7 and the clock pins
-   from `constraints/zedboard_m1.xdc` (drop the btnc and sw lines).
+   from `constraints/zedboard_replay.xdc` (drop the btnc and sw lines).
 2. Tools > Enable Dynamic Function eXchange. Right-click `u_rm` > Create
    Partition Definition. Add `rm_walk.v` as a second reconfigurable module.
 3. Run the Dynamic Function eXchange Wizard (Vivado 2020.1 or later; older versions call it the Partial Reconfiguration Wizard) to create two configurations, then
@@ -206,12 +206,12 @@ Done when the LED pattern changes from counting to a walking LED without
 reprogramming the whole device. Reference: UG909 (Vivado Dynamic Function
 eXchange user guide) and XAPP1231.
 
-## Results that go on slides (Milestone 1)
+## Results that go on slides
 
 - `build/source_report.md`: sources per capture (spoofed or single attacker)
-- `results/metrics.md`: precision, recall, F1 per class on test captures,
+- `results/detection_metrics.md`: precision, recall, F1 per class on test captures,
   alarm delay, false alarms, learned rules vs the teammates' hand rule
-- `results/windows_*.png`: traffic per window with attack windows shaded
+- `results/window_counts_*.png`: traffic per window with attack windows shaded
 - `make sim` output: PASS and cycles per region
 - Board: LEDs per region matching the expected line
 - ARM: `arm region=` records per second, and `compare.py board` PASS

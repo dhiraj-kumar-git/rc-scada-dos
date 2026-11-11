@@ -1,4 +1,4 @@
-// DFX smoke test (Milestone 1 stretch): one reconfigurable module drives the
+// DFX smoke test: one reconfigurable module drives the
 // LEDs. Two variants with the same ports: rm_count (binary counter) and
 // rm_walk (one lit LED walking). Load the full bitstream, then load the
 // other module's partial bitstream over JTAG: the LED pattern changes while
