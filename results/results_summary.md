@@ -35,9 +35,9 @@ with sklearn on 1.0000 of them. Distinct unknown sources: build/source_report.md
 
 | Result | Value | Comes from |
 | --- | --- | --- |
-| WNS at 10 ns clock | | build/vivado_timing.txt |
-| Block RAM cells | | build/vivado_utilization.txt |
-| LUTs / FFs | | build/vivado_utilization.txt |
+| WNS at 10 ns clock | +2.890 ns (all timing constraints met; WHS +0.086 ns) | build/vivado_timing.txt |
+| Block RAM cells | 25 RAMB36 of 140 (17.86 %), see note 7 | build/vivado_utilization.txt |
+| LUTs / FFs | 149 of 53200 (0.28 %) / 330 of 106400 (0.31 %) | build/vivado_utilization.txt |
 
 ## Per-packet work benchmark (why FPGA)
 
@@ -86,3 +86,11 @@ with sklearn on 1.0000 of them. Distinct unknown sources: build/source_report.md
    records + windows. Region 0 (normal) has 4087 mostly sparse windows, hence
    0.667; flood regions are 0.946 to 0.985.
 6. The `make arm-check` timing is emulator (QEMU) speed and is not quoted.
+7. Block RAM: a 32768 x 64-bit memory would need 64 RAMB36. Vivado kept 25.
+   The Detector does not read the 32 source-address bits (kept for the sketch;
+   synthesis warnings Synth 8-7129 and 8-13373), and in this data only 24 of
+   the remaining 32 bit columns are ever non-zero (timestamp bits 0 to 21,
+   kind bits 0 and 1), so the rest were removed as constants. The synthesis
+   log confirms records.mem was read (Synth 8-3876). Bitstream:
+   build/replay_top.bit, built with Vivado 2026.1, part xc7z020clg484-1,
+   100 MHz clock; implementation had 0 warnings, 0 critical warnings.
