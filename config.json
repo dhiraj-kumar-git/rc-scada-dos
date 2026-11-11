@@ -1,0 +1,20 @@
+{
+ "_note": "Real Coimbra data, release MODBUSTCP#1, asset captures1_v2.zip unzipped into data/. One 0.5 h capture per scenario for train and a DIFFERENT capture of the same scenario for test (clean test is the 1 h capture: the release has only one 0.5 h clean capture). The name field gives each capture a short name without commas, used for build/records and results/window_counts_<name>.png.",
+ "captures": [
+  {"name": "clean_0p5h",       "file": "data/captures1_v2/clean/eth2dump-clean-0,5h_1.pcap",                                      "scenario": "normal",       "split": "train"},
+  {"name": "clean_1h",         "file": "data/captures1_v2/clean/eth2dump-clean-1h_1.pcap",                                        "scenario": "normal",       "split": "test"},
+  {"name": "ping_15m_0p5h",    "file": "data/captures1_v2/pingFloodDDoS/eth2dump-pingFloodDDoS15m-0,5h_1.pcap",                   "scenario": "ping_flood",   "split": "train"},
+  {"name": "ping_5m_0p5h",     "file": "data/captures1_v2/pingFloodDDoS/eth2dump-pingFloodDDoS5m-0,5h_1.pcap",                    "scenario": "ping_flood",   "split": "test"},
+  {"name": "syn_15m_0p5h",     "file": "data/captures1_v2/tcpSYNFloodDDoS/eth2dump-tcpSYNFloodDDoS15m-0,5h_1.pcap",               "scenario": "syn_flood",    "split": "train"},
+  {"name": "syn_5m_0p5h",      "file": "data/captures1_v2/tcpSYNFloodDDoS/eth2dump-tcpSYNFloodDDoS5m-0,5h_1.pcap",                "scenario": "syn_flood",    "split": "test"},
+  {"name": "modbus_15m_0p5h",  "file": "data/captures1_v2/modbusQueryFlooding/eth2dump-modbusQueryFlooding15m-0,5h_1.pcap",       "scenario": "modbus_flood", "split": "train"},
+  {"name": "modbus_5m_0p5h",   "file": "data/captures1_v2/modbusQueryFlooding/eth2dump-modbusQueryFlooding5m-0,5h_1.pcap",        "scenario": "modbus_flood", "split": "test"}
+ ],
+ "bram_depth": 32768,
+ "demo": [
+  {"capture": "clean_1h",        "start_s": 0,  "max_records": 8192},
+  {"capture": "ping_5m_0p5h",    "lead_s": 1.0, "max_records": 8192},
+  {"capture": "syn_5m_0p5h",     "lead_s": 1.0, "max_records": 8192},
+  {"capture": "modbus_5m_0p5h",  "lead_s": 1.0, "max_records": 8192}
+ ]
+}

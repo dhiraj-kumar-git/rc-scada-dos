@@ -1,0 +1,15 @@
+Learned rules (depth-3 tree), counts per 100 ms window:
+
+    if icmp count <= 0 per 100 ms:
+        if other count <= 8 per 100 ms:
+            if syn count <= 1 per 100 ms:
+                -> normal
+            else:
+                -> syn_flood
+        else:
+            if other count <= 11 per 100 ms:
+                -> modbus_flood
+            else:
+                -> modbus_flood
+    else:
+        -> ping_flood
