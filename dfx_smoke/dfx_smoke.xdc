@@ -14,8 +14,11 @@ set_property PACKAGE_PIN U19 [get_ports {led[6]}]
 set_property PACKAGE_PIN U14 [get_ports {led[7]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {led[*]}]
 
-## Reconfigurable region: one clock region high (rows 100 to 149), 20 slice columns
+## Reconfigurable region: one clock region high (rows 100 to 149, clock region X0Y2), 20 slice columns.
+## On the XC7Z020 the processing system occupies slice columns 0 to 25 in rows 50 to 149, so the range starts at column 26.
 create_pblock pblock_rm
 add_cells_to_pblock [get_pblocks pblock_rm] [get_cells u_rm]
-resize_pblock [get_pblocks pblock_rm] -add {SLICE_X0Y100:SLICE_X19Y149}
+resize_pblock [get_pblocks pblock_rm] -add {SLICE_X26Y100:SLICE_X45Y149}
+## The same rectangle also holds one DSP and one block RAM column: range them too (DRC HDPR-45)
+resize_pblock [get_pblocks pblock_rm] -add {DSP48_X2Y40:DSP48_X2Y59 RAMB18_X2Y40:RAMB18_X2Y59 RAMB36_X2Y20:RAMB36_X2Y29}
 set_property SNAPPING_MODE ON [get_pblocks pblock_rm]
