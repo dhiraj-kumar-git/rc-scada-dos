@@ -41,13 +41,16 @@ with sklearn on 1.0000 of them. Distinct unknown sources: build/source_report.md
 
 ## Per-packet work benchmark (why FPGA)
 
-| Work per packet | PC, million records/s (measured, 2.1 GHz Xeon) | ARM on the board (lab session) | FPGA |
+Measured with `make bench` on an Intel i7-13620H laptop (WSL2, gcc -O2), synthetic records
+(c/sketch_bench.c: 40 per 100 ms window, random sources). FPGA column: not built yet.
+
+| Work per packet | PC, million records/s, median (min to max) of 3 runs, results/benchmark_pc.txt | ARM on the board (lab session) | FPGA |
 | --- | --- | --- | --- |
-| Plain counting (d = 0) | 627 to 818 | | not built yet |
-| Sketch, 1 row | 239 to 249 | | not built yet |
-| Sketch, 2 rows | 106 to 175 | | not built yet |
-| Sketch, 4 rows | 89 to 114 | | not built yet |
-| Sketch, 8 rows | 62 to 70 | | not built yet |
+| Plain counting (d = 0) | 952 (947 to 983) | | not built yet |
+| Sketch, 1 row | 222 (221 to 223) | | not built yet |
+| Sketch, 2 rows | 173 (164 to 173) | | not built yet |
+| Sketch, 4 rows | 110 (105 to 114) | | not built yet |
+| Sketch, 8 rows | 62 (54 to 63) | | not built yet |
 
 ## DFX bitstreams and live swap (lab session)
 
