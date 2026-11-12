@@ -28,7 +28,8 @@ module detector #(
     output reg  [15:0] win_other,
     output reg  [1:0]  win_cls,      // 0 normal, 1 ping, 2 syn, 3 modbus
     output reg         win_alarm,
-    output reg  [1:0]  win_branch    // 0 none, 1 network layer, 2 application layer
+    output reg  [1:0]  win_branch,   // 0 none, 1 network layer, 2 application layer
+    output wire [23:0] cur_win       // window of the record accepted this clock (for the sketch)
 );
 
 `include "rules.vh"
@@ -45,6 +46,7 @@ module detector #(
 
     wire boundary = in_valid && ({1'b0, ts} >= cur_end);
     assign in_ready = !boundary;
+    assign cur_win  = idx;
     wire emit = boundary || flush;
 
     wire [1:0] cls   = classify(c_icmp, c_syn, c_modbus, c_other);

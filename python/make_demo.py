@@ -16,6 +16,7 @@ Writes:
     build/expected_r<i>.txt golden window outputs per region
     build/expected_summary.txt  one summary line per region
     build/expected_leds.txt     LD7..LD0 after each run, as the testbench prints them
+    build/expected_sketch_d<D>_r<i>.txt  sketch golden output per window, D = 1, 2, 4, 8
 """
 
 import json
@@ -25,8 +26,10 @@ import sys
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(__file__))
-from common import (CLASSES, PERSIST, TICK_US, TS_BITS, WINDOW_TICKS, format_window,  # noqa: E402
-                    load_rules, pack, run_detector, summary_line, window_counts)
+from common import (CLASSES, PERSIST, SK_DEPTHS, TICK_US, TS_BITS, WINDOW_TICKS,  # noqa: E402
+                    RM_NAMES, format_sketch, format_window, format_word, load_rules, pack,
+                    rm_words, run_detector, run_sketch,
+                    summary_line, window_counts)
 
 N_REGIONS = 4
 
@@ -61,6 +64,15 @@ def main(cfg_path):
 
         counts = window_counts(ticks, kind[sel])
         out = run_detector(rules, counts)
+        for m in RM_NAMES:
+            dec, diag = rm_words(m, rules, ticks, kind[sel], src[sel])
+            for tag, wl in (("dec", dec), ("diag", diag)):
+                with open(os.path.join(base, "build", "expected_mod%d_r%d_%s.txt" % (m, i, tag)), "w") as f:
+                    f.write("".join(format_word(w) + "\n" for w in wl))
+        for dd in SK_DEPTHS:
+            sk = run_sketch(ticks, src[sel], dd)
+            with open(os.path.join(base, "build", "expected_sketch_d%d_r%d.txt" % (dd, i)), "w") as f:
+                f.write("\n".join(format_sketch(o) for o in sk) + "\n")
         with open(os.path.join(base, "build", "expected_r%d.txt" % i), "w") as f:
             f.write("\n".join(format_window(o) for o in out) + "\n")
         line = summary_line(i, out)

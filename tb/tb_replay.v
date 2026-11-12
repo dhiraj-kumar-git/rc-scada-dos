@@ -13,8 +13,21 @@ module tb_replay;
     reg [1:0] sw = 0;
     wire [7:0] led;
 
-    replay_top #(.DEBOUNCE_BITS(2), .MEMFILE("rtl/records.mem")) dut (
+`ifndef SKETCH_D
+`define SKETCH_D 0
+`endif
+    replay_top #(.DEBOUNCE_BITS(2), .MEMFILE("rtl/records.mem"), .SKETCH_D(`SKETCH_D)) dut (
         .clk(clk), .btnc(btnc), .sw(sw), .led(led));
+
+    // sketch output (only when compiled with -DSKETCH -DSKETCH_D=<d>)
+    integer fk = 0;
+`ifdef SKETCH
+    always @(posedge clk) begin
+        if (dut.g_sketch.sk_valid && fk != 0)
+            $fwrite(fk, "%0d %0d %0d %0d\n", dut.g_sketch.sk_win, dut.g_sketch.sk_top_src,
+                    dut.g_sketch.sk_top_est, dut.g_sketch.sk_set_bits);
+    end
+`endif
 
     integer fd = 0, fs = 0, fl = 0, r, n_win, n_alarm, first_alarm, first_class;
     reg [8*64:1] fname;
@@ -46,20 +59,28 @@ module tb_replay;
             if (len != 0) begin
                 $sformat(fname, "build/sim_r%0d.txt", r);
                 fd = $fopen(fname, "w");
+`ifdef SKETCH
+                $sformat(fname, "build/sim_sketch_d%0d_r%0d.txt", `SKETCH_D, r);
+                fk = $fopen(fname, "w");
+                wait (dut.sk_busy == 1'b0);
+`endif
                 n_win = 0; n_alarm = 0; first_alarm = -1; first_class = -1;
                 sw = r[1:0];
                 repeat (4) @(posedge clk);
                 btnc = 1; repeat (20) @(posedge clk); btnc = 0;
                 wait (dut.state == 2'd1);          // RUN
                 wait (dut.state == 2'd3);          // DONE
-                repeat (4) @(posedge clk);
+                repeat (20) @(posedge clk);        // let the sketch pipeline drain
                 $fclose(fd); fd = 0;
+`ifdef SKETCH
+                $fclose(fk); fk = 0;
+`endif
                 $fwrite(fs, "region=%0d windows=%0d alarm_windows=%0d first_alarm=%0d first_class=%0d\n",
                         r, n_win, n_alarm, first_alarm, first_class);
                 $fwrite(fl, "region=%0d leds=%b\n", r, led);
-                $display("region=%0d windows=%0d alarm_windows=%0d first_alarm=%0d first_class=%0d | records=%0d cycles=%0d records_per_cycle=%0.3f | LEDs=%b",
+                $display("region=%0d windows=%0d alarm_windows=%0d first_alarm=%0d first_class=%0d | records=%0d cycles=%0d records_per_cycle=%0.3f | LEDs=%b | sketch_d=%0d",
                          r, n_win, n_alarm, first_alarm, first_class, len, dut.cycles,
-                         len * 1.0 / dut.cycles, led);
+                         len * 1.0 / dut.cycles, led, `SKETCH_D);
             end
         end
         $fclose(fs);

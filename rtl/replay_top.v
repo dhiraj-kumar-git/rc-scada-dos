@@ -13,7 +13,8 @@
 // records / (cycles * 10 ns).
 module replay_top #(
     parameter integer DEBOUNCE_BITS = 20,          // about 10 ms at 100 MHz
-    parameter         MEMFILE       = "records.mem"
+    parameter         MEMFILE       = "records.mem",
+    parameter integer SKETCH_D      = 0            // 0: no sketch (board design); 1, 2, 4, 8: sketch rows
 ) (
     input  wire       clk,
     input  wire       btnc,
@@ -82,7 +83,8 @@ module replay_top #(
         rd_valid <= issue;
     end
 
-    wire clr = start_pulse && (state == S_IDLE || state == S_DONE);
+    wire sk_busy;
+    wire clr = start_pulse && (state == S_IDLE || state == S_DONE) && !sk_busy;
 
     always @(posedge clk) begin
         if (clr) begin
@@ -103,6 +105,7 @@ module replay_top #(
     end
 
     // ------------------------------------------------ Detector
+    wire [23:0] cur_win;
     wire        win_valid, win_alarm;
     wire [23:0] win_idx;
     wire [15:0] win_icmp, win_syn, win_modbus, win_other;
@@ -114,8 +117,27 @@ module replay_top #(
         .flush(state == S_FLUSH),
         .win_valid(win_valid), .win_idx(win_idx),
         .win_icmp(win_icmp), .win_syn(win_syn), .win_modbus(win_modbus), .win_other(win_other),
-        .win_cls(win_cls), .win_alarm(win_alarm), .win_branch(win_branch)
+        .win_cls(win_cls), .win_alarm(win_alarm), .win_branch(win_branch),
+        .cur_win(cur_win)
     );
+
+    // ------------------------------------------------ optional sketch on the same stream (no stall)
+    generate
+        if (SKETCH_D > 0) begin : g_sketch
+            wire        sk_valid;
+            wire [23:0] sk_win;
+            wire [31:0] sk_top_src;
+            wire [15:0] sk_top_est;
+            wire [10:0] sk_set_bits;
+            sketch #(.D(SKETCH_D)) u_sk (
+                .clk(clk), .clr(clr), .in_fire(pop), .in_rec(f_data), .in_win(cur_win),
+                .flush(state == S_FLUSH),
+                .out_valid(sk_valid), .out_win(sk_win), .out_top_src(sk_top_src),
+                .out_top_est(sk_top_est), .out_set_bits(sk_set_bits), .busy(sk_busy));
+        end else begin : g_nosketch
+            assign sk_busy = 1'b0;
+        end
+    endgenerate
 
     // ------------------------------------------------ state machine + result latch
     reg       alarm_seen = 1'b0;

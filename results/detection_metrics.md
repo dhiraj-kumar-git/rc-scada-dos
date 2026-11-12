@@ -35,3 +35,12 @@ Training windows: 71966, test windows: 89952. Exported rules agree with sklearn 
 | --- | --- | --- | --- | --- |
 | clean_1h | normal | -1 | - | 0 |
 | modbus_5m_0p5h | modbus_flood | 2991 | 400 | 2 |
+
+## DoS or DDoS: distinct-source estimate (T = 16.00, set_bits >= 16)
+
+| capture | scenario | attack windows | attack windows flagged DDoS | normal windows | normal windows flagged DDoS | max estimate in attack windows |
+| --- | --- | --- | --- | --- | --- | --- |
+| clean_1h | normal | 0 | 0 | 35999 | 0 | - |
+| ping_5m_0p5h | ping_flood | 3091 | 2948 | 14898 | 0 | 22.2 |
+| syn_5m_0p5h | syn_flood | 3091 | 2942 | 14892 | 0 | 21.2 |
+| modbus_5m_0p5h | modbus_flood | 1693 | 0 | 16288 | 0 | 3.0 |

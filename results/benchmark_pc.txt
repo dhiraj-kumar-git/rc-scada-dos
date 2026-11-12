@@ -1,21 +1,22 @@
 # Per-packet work benchmark on a PC (make bench), 3 runs
 # CPU: 13th Gen Intel(R) Core(TM) i7-13620H, WSL2 Ubuntu 24.04, gcc 13.3.0 -O2
 # Records are synthetic (c/sketch_bench.c: 40 per 100 ms window, random sources).
+# Sketch rules match the golden model (python/common.py run_sketch); checked by make sketch-host.
 ## run 1
-pc d=0 records_per_s=946509182 ns_per_record=1.06 check=31744
-pc d=1 records_per_s=222580892 ns_per_record=4.49 check=44232
-pc d=2 records_per_s=163687293 ns_per_record=6.11 check=47848
-pc d=4 records_per_s=109985586 ns_per_record=9.09 check=19304
-pc d=8 records_per_s=61675485 ns_per_record=16.21 check=60776
+pc d=0 records_per_s=886313755 ns_per_record=1.13 check=0
+pc d=1 records_per_s=267039706 ns_per_record=3.74 check=47728
+pc d=2 records_per_s=178941738 ns_per_record=5.59 check=27656
+pc d=4 records_per_s=112932670 ns_per_record=8.85 check=48272
+pc d=8 records_per_s=65978710 ns_per_record=15.16 check=55000
 ## run 2
-pc d=0 records_per_s=982907553 ns_per_record=1.02 check=31744
-pc d=1 records_per_s=220952052 ns_per_record=4.53 check=44232
-pc d=2 records_per_s=172560561 ns_per_record=5.80 check=47848
-pc d=4 records_per_s=113733317 ns_per_record=8.79 check=19304
-pc d=8 records_per_s=62626102 ns_per_record=15.97 check=60776
+pc d=0 records_per_s=755575197 ns_per_record=1.32 check=0
+pc d=1 records_per_s=259496166 ns_per_record=3.85 check=47728
+pc d=2 records_per_s=183977266 ns_per_record=5.44 check=27656
+pc d=4 records_per_s=113732879 ns_per_record=8.79 check=48272
+pc d=8 records_per_s=65402445 ns_per_record=15.29 check=55000
 ## run 3
-pc d=0 records_per_s=952115122 ns_per_record=1.05 check=31744
-pc d=1 records_per_s=221709155 ns_per_record=4.51 check=44232
-pc d=2 records_per_s=172893452 ns_per_record=5.78 check=47848
-pc d=4 records_per_s=105219483 ns_per_record=9.50 check=19304
-pc d=8 records_per_s=54338144 ns_per_record=18.40 check=60776
+pc d=0 records_per_s=856056370 ns_per_record=1.17 check=0
+pc d=1 records_per_s=265635661 ns_per_record=3.76 check=47728
+pc d=2 records_per_s=184951020 ns_per_record=5.41 check=27656
+pc d=4 records_per_s=93596919 ns_per_record=10.68 check=48272
+pc d=8 records_per_s=68954103 ns_per_record=14.50 check=55000

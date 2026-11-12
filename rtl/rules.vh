@@ -25,3 +25,5 @@ function [1:0] classify;
         end
     end
 endfunction
+// DDoS when the distinct-source table has at least this many set bits (estimate >= T = 16.00)
+localparam [10:0] DDOS_SETBITS = 11'd16;

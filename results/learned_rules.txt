@@ -13,3 +13,7 @@ Learned rules (depth-3 tree), counts per 100 ms window:
                 -> modbus_flood
     else:
         -> ping_flood
+
+DoS or DDoS (distinct-source estimate per window, linear counting on 1024 bits):
+    T = max(16, 4 x max over normal training windows) = max(16, 4 x 3.00) = 16.00
+    DDoS if estimate >= T, i.e. set_bits >= 16

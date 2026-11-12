@@ -22,4 +22,6 @@ static inline int classify(uint32_t icmp, uint32_t syn, uint32_t modbus, uint32_
         return 1;  /* ping_flood */
     }
 }
+/* DDoS when the distinct-source table has >= DDOS_SETBITS set bits (estimate >= T = 16.00) */
+#define DDOS_SETBITS 16u
 #endif
