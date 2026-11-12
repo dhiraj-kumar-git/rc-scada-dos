@@ -106,3 +106,93 @@ Measured with `make bench` on an Intel i7-13620H laptop (WSL2, gcc -O2), synthet
    35 FFs. Both modules also pass simulation (dfx_smoke/tb_dfx.v, Icarus):
    rm_count counts 1, 2, 3, 4; rm_walk walks 2, 4, 8, 16. The live swap on the
    board is still a lab session item.
+
+## E1: count-min sketch and distinct-source counter (cycle-accurate simulation; Vivado implementation at 100 MHz; not yet measured on the board)
+
+Golden model `run_sketch()` in python/common.py; RTL rtl/sketch.v; C c/sketch_bench.c.
+
+| Check | Result | Source |
+| --- | --- | --- |
+| RTL sketch vs golden model, 4 demo regions x D = 1, 2, 4, 8 | PASS, every window identical (2940, 434, 452, 78 windows per depth) | `make sketch` (python/compare.py sketch) |
+| Stress vectors (same source back to back, alternating, shared cell, src = 0, saturation at 65535, idle clocks) | PASS for D = 1, 2, 4, 8 (87,761 records); a copy without forwarding fails | `make sketch-vec` |
+| C sketch vs golden model | PASS, every window, D = 1, 2, 4, 8 | `make sketch-host` |
+| Records per cycle with the sketch attached | identical to no sketch at every D: 0.667, 0.948, 0.946, 0.985 | build/sketch_sim_d<D>.txt |
+| Timing at 100 MHz, sketch alone | met for D = 1, 2, 4, 8 (WNS +1.208, +1.281, +1.702, +1.490 ns) | results/sketch_sweep.txt |
+
+Records per second versus D (PC: make bench; FPGA: 100 MHz x simulated records per cycle,
+flood regions): see results/why_fpga.md. PC 856, 266, 184, 113, 66 million records/s for
+D = 0, 1, 2, 4, 8; FPGA 94.6 to 98.5 million records/s at every D. The PC is faster up to
+D = 4; the FPGA rate does not depend on D. Both exceed the 10 GbE worst case (14.88 Mpps).
+
+Notes:
+9. Window tag: 16 bits (window index + 1) per cell instead of 8. An 8-bit tag repeats
+   every 256 windows, which would break "cells are zero at the start of every window";
+   window indices stay below 2^15, so 16 bits never repeat within a run. Each row still
+   uses block RAM only (1024 x 32 bits; Vivado used 2 RAMB36 per row).
+10. The first sweep failed timing at D = 8 (WNS -1.556 ns, 17 logic levels in the row
+    minimum). Fixed by a balanced two-clock minimum; one extra clock of sketch latency,
+    no change in records per cycle.
+11. DoS or DDoS (results/detection_metrics.md): T = max(16, 4 x 3.00) = 16 distinct sources
+    (set_bits >= 16). Test captures: ping flood 2948 of 3091 attack windows flagged DDoS,
+    SYN flood 2942 of 3091, Modbus flood (one attacker host) 0 of 1693, normal windows 0.
+
+## E2: real DFX modules, detection then diagnosis (cycle-accurate simulation; Vivado implementation at 100 MHz; not yet measured on the board)
+
+One partition u_rm (rm_slot), static top rtl/diag_top.v. Modules: rm_detector (Detector),
+rm_net_diag (Detector + sketch D = 4 + distinct counter), rm_modbus_diag (Detector + sketch D = 2).
+Golden model `rm_words()` in python/common.py.
+
+| Check | Result | Source |
+| --- | --- | --- |
+| Each module through the static top, 4 demo regions | PASS: decision words (4087, 443, 461, 121 per module) and diagnosis words (2940, 434, 452, 78) identical; LEDs match | `make modules-sim` (python/compare.py modules) |
+| Full and partial bitstreams, 3 configurations | built; timing met at 100 MHz in all three (WNS +0.844 ns) | build/dfx_diag/, DFX_DIAG_RESULT lines |
+| pr_verify | configuration 1 compatible with 2 and with 3 (3570 static tiles, 50,247 routed nodes, 77 partition pins) | build/dfx_diag/pr_verify.txt |
+
+| Module | Partial bitstream | Predicted swap time (predicted from partial bitstream size, 128 MB/s) | Pblock use: LUTs / FFs / RAMB36 / DSP |
+| --- | --- | --- | --- |
+| rm_detector | 1,154,452 bytes | 9.02 ms | 94 / 156 / 0 / 0 |
+| rm_net_diag | 1,154,452 bytes | 9.02 ms | 853 / 729 / 8.5 / 12 |
+| rm_modbus_diag | 1,154,452 bytes | 9.02 ms | 559 / 597 / 4.5 / 6 |
+
+Full bitstreams 4,045,763 bytes each. References: XAPP1159 134,392 bytes in 1,060 us; Thinh et al.
+2016 about 82 ms for 822 KB.
+
+Notes:
+12. The Pblock is the whole clock region X1Y2 (2600 slices, 30 RAMB36, 40 DSP48), so all three
+    partial bitstreams have the same size; a narrower Pblock that still holds 8.5 RAMB36 and 12 DSP
+    would shrink the swap (next step). A first run with the region written as CLOCKREGION_X1Y2
+    left the Pblock empty (DRC HDPR-74); explicit site ranges fixed it.
+13. 8 CRITICAL WARNING [Common 17-55] in the DFX run: the bank-wide IOSTANDARD lines of
+    constraints/zedboard_replay.xdc find no ports when the locked static checkpoint is reopened
+    for configurations 2 and 3. Checked in all three routed checkpoints: every pin has the same
+    location and I/O standard as in configuration 1 (clk and LEDs LVCMOS33, BTNC and switches
+    LVCMOS18), so the warnings have no effect on the bitstreams.
+
+## E3: load mode, hold FIFO and zero-loss swap (cycle-accurate simulation; swap time predicted from partial bitstream size; not yet measured on the board)
+
+tb/tb_zero_loss.v (Detector RTL), python/zero_loss.py; full table results/zero_loss.md.
+Traffic: 65,536 records of the ping flood test capture. H = 16,384. Swap at the first alarm,
+S = 901,916 clocks (9.02 ms, Network Diagnoser partial bitstream at 128 MB/s).
+Predicted limit H x 100e6 / S = 1.817 million records/s.
+
+| Offered, million records/s | 0.908 | 1.488 (1 GbE) | 1.762 | 1.798 | 1.835 | 1.871 | 1.998 | 3.633 | 14.88 (10 GbE) | 100 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Dropped records | 0 | 0 | 0 | 0 | 163 | 491 | 1638 | 16384 | 49143 | 49143 |
+
+Check PASS: 0 drops below the limit, drops beyond it (163, 491, 1638 against the predicted
+0.01, 0.03, 0.10 x H = 164, 492, 1638), and every zero-drop run gives windows identical to the
+golden model. Zero loss holds above the 1 GbE worst case but not at the 10 GbE worst case with
+this swap time; 10 GbE would need H of about 134,000 records or a shorter swap.
+
+## E4: charts and comparison (results/)
+
+| File | What it shows | Source data |
+| --- | --- | --- |
+| results/why_fpga.png | Records/s versus sketch depth D, PC and FPGA, 1 GbE and 10 GbE worst-case lines | results/benchmark_pc.txt, build/sketch_sim_d<D>.txt, results/sketch_sweep.txt |
+| results/zero_loss.png | Dropped records versus offered rate, predicted limit marked | results/zero_loss.csv |
+| results/timeline_normal.png, timeline_ping_flood.png, timeline_syn_flood.png, timeline_modbus_flood.png | Per-window counts per demo region, alarm windows shaded, attack tree branch named | build/expected_r<i>.txt (identical to simulation) |
+| results/comparison.md | Our numbers next to Frazao et al. 2018 (same dataset), XAPP1159, ZyCAP, Thinh et al. 2016, Le Jeune et al. 2021, 1 GbE and 10 GbE | the files above; sources listed in the file |
+
+Every chart caption carries the required labels: cycle-accurate simulation, Vivado implementation
+at 100 MHz, predicted from partial bitstream size, not yet measured on the board.
+Generated by `python3 python/e4_charts.py`.
