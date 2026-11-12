@@ -49,14 +49,14 @@ with sklearn on 1.0000 of them. Distinct unknown sources: build/source_report.md
 | Sketch, 4 rows | 89 to 114 | | not built yet |
 | Sketch, 8 rows | 62 to 70 | | not built yet |
 
-## DFX bitstreams (today) and live swap (lab session)
+## DFX bitstreams and live swap (lab session)
 
 | Result | Value | Comes from |
 | --- | --- | --- |
-| Full bitstreams built (names, sizes) | | `DFX_RESULT` lines |
-| Partial bitstreams built (names, sizes) | | `DFX_RESULT` lines |
-| pr_verify passed (yes or no) | | build/dfx/pr_verify.txt |
-| Predicted swap time at 128 MB/s (partial size / 128 MB/s) | | computed from the row above |
+| Full bitstreams built (names, sizes) | config_count.bit 4,045,762 bytes; config_walk.bit 4,045,762 bytes | `DFX_RESULT` lines |
+| Partial bitstreams built (names, sizes) | config_count_pblock_rm_partial.bit 383,555 bytes; config_walk_pblock_rm_partial.bit 383,555 bytes | `DFX_RESULT` lines |
+| pr_verify passed (yes or no) | yes: the two routed configurations are compatible (1224 static tiles, 634 static routed nodes compared) | build/dfx/pr_verify.txt |
+| Predicted swap time at 128 MB/s (partial size / 128 MB/s) | about 3.0 ms (383,555 bytes / 128 x 10^6 bytes/s = 2.997 ms); a prediction, not a measurement | computed from the row above |
 | Live swap changed the LEDs without full reprogram (lab session) | | observed |
 
 ## Notes on the data (from build/source_report.md and results/detection_metrics.md)
@@ -94,3 +94,12 @@ with sklearn on 1.0000 of them. Distinct unknown sources: build/source_report.md
    log confirms records.mem was read (Synth 8-3876). Bitstream:
    build/replay_top.bit, built with Vivado 2026.1, part xc7z020clg484-1,
    100 MHz clock; implementation had 0 warnings, 0 critical warnings.
+8. DFX (Vivado 2026.1, 60-day evaluation license that includes DFX; the
+   free BASIC license does not). Reconfigurable region pblock_rm:
+   SLICE_X26Y100:SLICE_X45Y149 plus the DSP48, RAMB18 and RAMB36 columns
+   inside it (clock region X0Y2, one clock region high). Final run: 0 errors,
+   0 critical warnings; timing met at 100 MHz in both configurations
+   (WNS +6.278 ns counter, +5.679 ns walking LED). Whole counter configuration: 13 LUTs,
+   35 FFs. Both modules also pass simulation (dfx_smoke/tb_dfx.v, Icarus):
+   rm_count counts 1, 2, 3, 4; rm_walk walks 2, 4, 8, 16. The live swap on the
+   board is still a lab session item.
